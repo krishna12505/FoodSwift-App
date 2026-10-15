@@ -1,0 +1,470 @@
+.header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+    background: #ffffff;
+    border-bottom: 1px solid #f1e9e2;
+    font-family: "Segoe UI", Arial, sans-serif;
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+
+    width: 100%;
+    max-width: 1440px;
+    min-height: 78px;
+    margin: 0 auto;
+    padding: 0 48px;
+}
+
+.header .logo {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    flex-shrink: 0;
+
+    padding: 0;
+    color: inherit;
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    outline: none;
+}
+
+.logo-image {
+    display: block;
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+}
+
+.brand-name {
+    color: #28221e;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    white-space: nowrap;
+}
+
+.brand-name span {
+    color: #ff7200;
+}
+
+.header .header-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 34px;
+}
+
+.header .header-nav a {
+    position: relative;
+    display: inline-block;
+
+    padding: 9px 0;
+    color: #514941;
+    background: transparent;
+    border: none;
+    outline: none;
+
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition: color 0.2s ease;
+}
+
+.header .header-nav a:hover {
+    color: #ff7200;
+}
+
+.header .header-nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: 2px;
+    left: 0;
+
+    height: 2px;
+    content: "";
+    background: #ff7200;
+    border-radius: 4px;
+
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform 0.2s ease;
+}
+
+.header .header-nav a:hover::after {
+    transform: scaleX(1);
+}
+
+
+.header .header-button {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.header .Signin-button,
+.header .signup-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 100px;
+    height: 42px;
+    padding: 0 20px;
+
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+
+    transition: background 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease,
+                transform 0.2s ease;
+}
+
+.header .Signin-button {
+    color: #e96800;
+    background: #ffffff;
+    border: 1px solid #f0c29f;
+    box-shadow: none;
+}
+
+.header .Signin-button:hover {
+    background: #fff6ed;
+    border-color: #ff9b52;
+}
+
+.header .signup-button {
+    color: #ffffff;
+    background: #ff7200;
+    border: 1px solid #ff7200;
+    box-shadow: 0 4px 12px rgba(255, 114, 0, 0.16);
+}
+
+.header .signup-button:hover {
+    background: #e96300;
+    border-color: #e96300;
+    box-shadow: 0 6px 15px rgba(255, 114, 0, 0.23);
+    transform: translateY(-1px);
+}
+
+
+.header .profile-container {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.header .profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    min-height: 48px;
+    padding: 5px 13px 5px 6px;
+
+    color: #30251e;
+    background: #ffffff;
+    border: 1px solid #eee2d8;
+    border-radius: 30px;
+    outline: none;
+
+    font-family: inherit;
+    cursor: pointer;
+
+    transition: background 0.2s ease,
+                border-color 0.2s ease,
+                box-shadow 0.2s ease;
+}
+
+.header .profile-trigger:hover,
+.header .profile-trigger[aria-expanded="true"] {
+    background: #fff9f3;
+    border-color: #ffb67d;
+    box-shadow: 0 4px 14px rgba(255, 114, 0, 0.1);
+}
+
+.header .profile-avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 36px;
+    height: 36px;
+
+    color: #ffffff;
+    background: linear-gradient(135deg, #ff9c3f, #ff7200);
+    border: 2px solid #fff0df;
+    border-radius: 50%;
+
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.header .profile-name {
+    display: block;
+    max-width: 145px;
+    overflow: hidden;
+
+    color: #30251e;
+    font-size: 13px;
+    font-weight: 700;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.header .profile-chevron {
+    color: #9b806d;
+    font-size: 9px;
+}
+
+
+.header .profile-dropdown {
+    position: absolute;
+    top: calc(100% + 12px);
+    right: 0;
+    z-index: 1100;
+
+    width: 275px;
+    padding: 9px;
+
+    background: #ffffff;
+    border: 1px solid #f0e7df;
+    border-radius: 16px;
+    box-shadow: 0 16px 42px rgba(43, 30, 19, 0.15);
+
+    animation: profileAppear 0.18s ease-out;
+}
+
+@keyframes profileAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Customer name and email */
+
+.header .profile-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    min-width: 0;
+    padding: 15px 13px;
+    margin-bottom: 6px;
+
+    background: linear-gradient(135deg, #fff6ec, #fffdfb);
+    border: 1px solid #fff0e1;
+    border-radius: 11px;
+}
+
+.header .profile-summary strong {
+    overflow-wrap: anywhere;
+    color: #30251e;
+    font-size: 15px;
+    font-weight: 750;
+}
+
+.header .profile-summary > span {
+    overflow-wrap: anywhere;
+    color: #84756a;
+    font-size: 12px;
+}
+
+/* Dropdown menu options */
+
+.profile-dropdown > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 13px 16px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.profile-dropdown > button:hover {
+  background: #fff3e8;
+  color: #f07800;
+}
+
+.profile-dropdown .menu-arrow {
+  color: #999;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.profile-dropdown .logout-option {
+  color: #d93636;
+}
+
+.profile-dropdown .logout-option:hover {
+  background: #fff0f0;
+  color: #c62828;
+}
+
+
+.header a:focus-visible,
+.header button:focus-visible {
+    outline: 2px solid #ff8b37;
+    outline-offset: 3px;
+}
+
+
+@media (max-width: 1000px) {
+    .header-container {
+        gap: 20px;
+        padding: 0 26px;
+    }
+
+    .header .header-nav {
+        gap: 22px;
+    }
+
+    .brand-name {
+        font-size: 23px;
+    }
+
+    .header .header-nav a {
+        font-size: 13px;
+    }
+}
+
+
+@media (max-width: 650px) {
+    .header-container {
+        min-height: 70px;
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 11px 18px;
+    }
+
+    .logo-image {
+        width: 36px;
+        height: 36px;
+    }
+
+    .brand-name {
+        font-size: 22px;
+    }
+
+    .header .header-nav {
+        order: 3;
+        justify-content: space-between;
+        gap: 12px;
+
+        width: 100%;
+        padding-top: 7px;
+        border-top: 1px solid #f3ece6;
+    }
+
+    .header .header-nav a {
+        padding: 6px 0;
+        font-size: 12px;
+    }
+
+    .header .header-button {
+        margin-left: auto;
+        gap: 7px;
+    }
+
+    .header .Signin-button,
+    .header .signup-button {
+        min-width: auto;
+        height: 37px;
+        padding: 0 12px;
+        font-size: 12px;
+    }
+
+    .header .profile-trigger {
+        min-height: 42px;
+        gap: 5px;
+        padding: 3px 6px;
+    }
+
+    .header .profile-avatar {
+        width: 34px;
+        height: 34px;
+    }
+
+    .header .profile-name {
+        display: none;
+    }
+
+    .header .profile-dropdown {
+        width: min(275px, calc(100vw - 24px));
+    }
+}
+
+@media (max-width: 380px) {
+    .header-container {
+        column-gap: 8px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .header .logo {
+        gap: 6px;
+    }
+
+    .logo-image {
+        width: 30px;
+        height: 30px;
+    }
+
+    .brand-name {
+        font-size: 19px;
+    }
+
+    .header .Signin-button,
+    .header .signup-button {
+        padding: 0 9px;
+        font-size: 11px;
+    }
+
+    .header .header-nav {
+        gap: 8px;
+    }
+
+    .header .header-nav a {
+        font-size: 11px;
+    }
+}
+
+/* Respect reduced-motion preferences */
+
+@media (prefers-reduced-motion: reduce) {
+    .header *,
+    .header *::before,
+    .header *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+    }
+}
+
