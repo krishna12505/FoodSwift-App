@@ -1,0 +1,516 @@
+
+.delivery-dashboard {
+  min-height: 100vh;
+  background: #f7f8fa;
+  color: #202124;
+  font-family: Inter, Arial, sans-serif;
+}
+
+.delivery-dashboard * {
+  box-sizing: border-box;
+}
+
+.delivery-header {
+  min-height: 82px;
+  padding: 16px 5%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.delivery-brand,
+.delivery-account {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.delivery-brand-icon {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #ffad33, #ff7000);
+  font-size: 27px;
+  font-weight: 800;
+}
+
+.delivery-brand h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.delivery-brand p,
+.delivery-account-info span {
+  display: block;
+  margin: 4px 0 0;
+  color: #777;
+  font-size: 12px;
+}
+
+.delivery-avatar {
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #fff0dc;
+  color: #e96e00;
+  font-weight: 800;
+  font-size: 18px;
+}
+
+.delivery-account-info strong {
+  font-size: 13px;
+}
+
+.delivery-logout,
+.delivery-refresh {
+  padding: 11px 16px;
+  border: 1px solid #e5e5e5;
+  border-radius: 9px;
+  background: #fff;
+  color: #333;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delivery-welcome {
+  margin: 28px auto;
+  width: 90%;
+  padding: 30px;
+  border-radius: 18px;
+  background: linear-gradient(115deg, #fff0dc, #fffaf4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.delivery-eyebrow {
+  color: #e87500;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+}
+
+.delivery-welcome h2 {
+  margin: 10px 0;
+  font-size: clamp(23px, 3vw, 32px);
+  letter-spacing: -0.8px;
+}
+
+.delivery-welcome p {
+  margin: 0;
+  color: #707070;
+  font-size: 14px;
+}
+
+.delivery-refresh {
+  flex-shrink: 0;
+  background: #ff8200;
+  color: #fff;
+  border-color: #ff8200;
+}
+
+.delivery-refresh:hover {
+  background: #e96e00;
+}
+
+.delivery-refresh:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.delivery-stats {
+  width: 90%;
+  margin: 0 auto 30px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.delivery-stat-card {
+  padding: 23px;
+  background: #fff;
+  border: 1px solid #ededed;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.025);
+}
+
+.delivery-stat-icon {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #fff0dc;
+  color: #e87500;
+  font-size: 22px;
+}
+
+.delivery-stat-card p {
+  margin: 18px 0 8px;
+  color: #666;
+  font-size: 13px;
+}
+
+.delivery-stat-card strong {
+  font-size: 30px;
+  letter-spacing: -0.7px;
+}
+
+.delivery-stat-card small {
+  display: block;
+  margin-top: 7px;
+  color: #999;
+  font-size: 12px;
+}
+
+.delivery-orders-section {
+  width: 90%;
+  margin: 0 auto;
+  padding: 25px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 16px;
+}
+
+.delivery-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.delivery-section-heading h2 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.delivery-section-heading p {
+  margin: 7px 0 0;
+  color: #888;
+  font-size: 13px;
+}
+
+.delivery-tabs {
+  display: flex;
+  gap: 24px;
+  margin: 24px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.delivery-tabs button {
+  padding: 0 2px 13px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: #777;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delivery-tabs button.selected {
+  color: #e87500;
+  border-bottom-color: #ff8200;
+}
+
+.delivery-order-list {
+  display: grid;
+  gap: 16px;
+}
+
+.delivery-order-card {
+  padding: 22px;
+  border: 1px solid #eee;
+  border-radius: 13px;
+  transition: box-shadow 0.2s ease;
+}
+
+.delivery-order-card:hover {
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.045);
+}
+
+.delivery-order-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.delivery-order-label,
+.delivery-order-details span,
+.delivery-address span,
+.delivery-items span {
+  display: block;
+  margin-bottom: 7px;
+  color: #888;
+  font-size: 11px;
+}
+
+.delivery-order-top h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.delivery-status {
+  padding: 7px 11px;
+  border-radius: 20px;
+  background: #fff0dc;
+  color: #b85c00;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.status-delivered {
+  background: #e4f7e9;
+  color: #20783b;
+}
+
+.status-cancelled {
+  background: #ffe8e8;
+  color: #bd3434;
+}
+
+.delivery-order-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 20px 0;
+}
+
+.delivery-order-details strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.delivery-address,
+.delivery-items {
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.delivery-address p,
+.delivery-items p {
+  margin: 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+.delivery-items {
+  margin-top: 14px;
+}
+
+.delivery-message {
+  padding: 45px 20px;
+  text-align: center;
+  color: #777;
+}
+
+.delivery-message h3 {
+  margin: 15px 0 8px;
+  color: #333;
+}
+
+.delivery-message p {
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.delivery-message button {
+  margin-top: 10px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #ff8200;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.delivery-error {
+  color: #b42318;
+}
+
+.delivery-error h3 {
+  color: #b42318;
+}
+
+.delivery-empty-icon {
+  font-size: 35px;
+  color: #e87500;
+}
+
+.delivery-spinner {
+  width: 30px;
+  height: 30px;
+  margin: 0 auto;
+  border: 3px solid #ffe1c0;
+  border-top-color: #ff8200;
+  border-radius: 50%;
+  animation: delivery-spin 0.8s linear infinite;
+}
+
+@keyframes delivery-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.delivery-footer {
+  padding: 28px 15px;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+@media (max-width: 700px) {
+  .delivery-header {
+    padding: 14px 5%;
+    flex-wrap: wrap;
+  }
+
+  .delivery-account {
+    gap: 8px;
+  }
+
+  .delivery-account-info {
+    display: none;
+  }
+
+  .delivery-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 24px;
+  }
+
+  .delivery-stats {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .delivery-stat-card {
+    padding: 18px;
+  }
+
+  .delivery-stat-card p {
+    margin-top: 12px;
+  }
+
+  .delivery-orders-section {
+    padding: 17px;
+  }
+
+  .delivery-tabs {
+    gap: 18px;
+  }
+
+  .delivery-order-card {
+    padding: 16px;
+  }
+
+  .delivery-order-details {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+.delivery-order-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.delivery-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 11px 20px;
+  border: none;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #ffad33, #ff7000);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.delivery-action-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(255, 128, 0, 0.22);
+}
+
+.delivery-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Status update success message */
+
+.delivery-action-success {
+  margin-top: 14px;
+  padding: 12px 15px;
+  border: 1px solid #c6ead0;
+  border-radius: 9px;
+  background: #f0fff4;
+  color: #237344;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Delivered order message */
+
+.delivery-completed-note {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: #e4f7e9;
+  color: #20783b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Cancelled order message */
+
+.delivery-cancelled-note {
+  display: inline-block;
+  margin-top: 16px;
+  padding: 9px 13px;
+  border-radius: 8px;
+  background: #ffe8e8;
+  color: #bd3434;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Mobile responsiveness */
+
+@media (max-width: 700px) {
+  .delivery-order-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .delivery-action-button {
+    width: 100%;
+  }
+}

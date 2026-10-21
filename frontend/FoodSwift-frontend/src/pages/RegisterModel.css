@@ -2,7 +2,8 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
+  font-family: "Segoe UI", Arial, sans-serif;
+} 
 
 .model-overlay {
   position: fixed;
@@ -174,6 +175,7 @@
 
   .register-left h2 {
     font-size: 24px;
+    
   }
 
   .register-left p {
