@@ -210,3 +210,28 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 RESTAURANT_REQUEST_EMAIL = os.getenv("RESTAURANT_REQUEST_EMAIL")
 
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
+
+
+
+# Log server-side Django errors to Render logs.
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        "django.db.backends": {
+            "handlers": ["console"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
