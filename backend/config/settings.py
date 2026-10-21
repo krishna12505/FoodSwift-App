@@ -27,12 +27,30 @@ load_dotenv(BASE_DIR/ ".env")
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-mi13b64upf=iv@jn!9+fn_o$&#5j#ndtc0w-(_)vbax1m29z-d'
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 
-ALLOWED_HOSTS = []
+# Security settings
+SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "")
+
+DEBUG = os.getenv("DJANGO_DEBUG", "True").lower() == "true"
+
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv(
+        "DJANGO_ALLOWED_HOSTS",
+        "127.0.0.1,localhost"
+    ).split(",")
+    if host.strip()
+]
+
+# Production security settings
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+
+    # Enable HSTS only after HTTPS is working correctly.
+    SECURE_HSTS_SECONDS = 31536000
 
 
 # Application definition
@@ -90,19 +108,22 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv("DB_NAME"),
-        'USER': os.getenv("DB_USER"),
-        'PASSWORD':os.getenv("DB_PASSWORD"),
-        'HOST':os.getenv("DB_HOST","127.0.0.1"),
-        'PORT': os.getenv("DB_PORT","3306"),
-        'OPTION':{
-            "charset":'utf8mb4'
+        'NAME': os.getenv('DB_NAME', 'foodswift_db'),
+        'USER': os.getenv('DB_USER', 'root'),
+        'PASSWORD': os.getenv('DB_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'ssl_mode': 'REQUIRED',
         },
     }
-    }
+}
+
 
 
 # Password validation
@@ -155,10 +176,13 @@ REST_FRAMEWORK = {
     ],
 }
 
-
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOWED_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",")
+    if origin.strip()
 ]
 
 SIMPLE_JWT = {
@@ -185,4 +209,4 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 RESTAURANT_REQUEST_EMAIL = os.getenv("RESTAURANT_REQUEST_EMAIL")
 
-FRONTEND_URL = "http://localhost:5173"
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
