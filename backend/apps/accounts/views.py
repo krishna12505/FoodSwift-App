@@ -37,7 +37,10 @@ class RegisterView(generics.CreateAPIView):
         account = serializer.save()
 
         # Send welcome email after successful registration
-        send_welcome_email(account)
+        try:
+            send_welcome_email(account)
+        except Exception as e:
+            print(f"Welcome email failed: {e}")
 
         return Response(
             {
