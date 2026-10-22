@@ -28,7 +28,7 @@ function RegisterModel({ closeRegister, openLogin }) {
 
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/account/register/",
+                "https://foodswift-app.onrender.com/api/account/register/",
                 {
                     method: "POST",
                     headers: {

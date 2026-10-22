@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./CustomerProfile.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://foodswift-app.onrender.com";
 
 function CustomerProfile() {
   const navigate = useNavigate();
