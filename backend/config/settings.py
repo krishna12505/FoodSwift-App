@@ -168,6 +168,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
     "https://food-swift-app.vercel.app",
+    "https://food-swift-app-git-main-krishna12505.vercel.app",
 ]
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
