@@ -1,16 +1,16 @@
-
 import "./RegisterModel.css";
 import { useState } from "react";
 
+const API_URL = (
+    import.meta.env.VITE_API_URL || "http://127.0.0.1:8000"
+).replace(/\/+$/, "");
+
 function RegisterModel({ closeRegister, openLogin }) {
     const [showPassword, setShowPassword] = useState(false);
-
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("");
-
-
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -19,7 +19,6 @@ function RegisterModel({ closeRegister, openLogin }) {
         setError("");
         setLoading(true);
 
-        // Match the role values accepted by your Django Account model.
         const roleMap = {
             customer: "customer",
             restaurant: "restaurant_owner",
@@ -28,7 +27,7 @@ function RegisterModel({ closeRegister, openLogin }) {
 
         try {
             const response = await fetch(
-                "https://foodswift-app.onrender.com/api/account/register/",
+                `${API_URL}/api/account/register/`,
                 {
                     method: "POST",
                     headers: {
@@ -58,18 +57,20 @@ function RegisterModel({ closeRegister, openLogin }) {
                     })
                     .join("\n");
 
-                setError(message || "Registration failed. Please try again.");
+                setError(
+                    message ||
+                    `Registration failed (HTTP ${response.status}). Please try again.`
+                );
                 return;
             }
 
             alert("FoodSwift account created successfully!");
-
             closeRegister();
             openLogin();
         } catch (err) {
             console.error("Registration error:", err);
             setError(
-                "Cannot connect to Django. Please check that the backend is running."
+                "Cannot connect to the server. Please check your connection and try again."
             );
         } finally {
             setLoading(false);
@@ -79,7 +80,6 @@ function RegisterModel({ closeRegister, openLogin }) {
     return (
         <div className="model-overlay">
             <div className="register-model">
-
                 <button
                     className="close-button"
                     type="button"
@@ -89,7 +89,6 @@ function RegisterModel({ closeRegister, openLogin }) {
                     ×
                 </button>
 
-                {/* Left section */}
                 <div className="register-left">
                     <div className="register-logo">
                         <img src="/foodswifticon.png" alt="FoodSwift" />
@@ -102,7 +101,6 @@ function RegisterModel({ closeRegister, openLogin }) {
                     </p>
                 </div>
 
-                {/* Right section */}
                 <div className="register-right">
                     <h1>Create Account</h1>
                     <p className="model-subtitle">Join FoodSwift today</p>
@@ -137,7 +135,6 @@ function RegisterModel({ closeRegister, openLogin }) {
 
                         <div className="input-group">
                             <label htmlFor="register-password">Password</label>
-
                             <div className="password-box">
                                 <input
                                     id="register-password"
@@ -200,7 +197,7 @@ function RegisterModel({ closeRegister, openLogin }) {
                     </form>
 
                     <p className="register-text">
-                        Already Have Account?
+                        Already Have Account?{" "}
                         <button type="button" onClick={openLogin}>
                             Sign In
                         </button>
