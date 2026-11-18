@@ -622,3 +622,29 @@
   color: #555;
   overflow-wrap: anywhere;
 }
+
+/* Fix food rating alignment */
+.food-menu-card .food-rating {
+  position: static !important;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  width: fit-content;
+  max-width: 100%;
+  margin: 10px 0 12px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  font-size: 13px;
+}
+
+.food-menu-card .food-rating-stars {
+  color: #f59e0b;
+  letter-spacing: 1px;
+}
+
+.food-menu-card .food-rating strong {
+  color: #29231f;
+}

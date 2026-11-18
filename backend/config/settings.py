@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "apps.menu.apps.MenuConfig",
     "apps.reviews.apps.ReviewsConfig",
     "apps.orders",
+    "apps.chatbot.apps.ChatbotConfig",
 
 
 ]
@@ -197,3 +198,9 @@ RESTAURANT_REQUEST_EMAIL = os.getenv("RESTAURANT_REQUEST_EMAIL")
 FRONTEND_URL = "http://localhost:5173"
 
 EMAIL_TIMEOUT = 10
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://food-swift-app.vercel.app",
+]
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

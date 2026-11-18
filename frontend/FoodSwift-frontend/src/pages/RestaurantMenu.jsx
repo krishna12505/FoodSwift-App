@@ -3,12 +3,15 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import "./RestaurantMenu.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
 function RestaurantMenu() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
   const restaurantId = searchParams.get("restaurant");
+  const selectedItemId = searchParams.get("item");
 
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,29 +24,29 @@ function RestaurantMenu() {
   const [reviewTexts, setReviewTexts] = useState({});
   const [ratingMessages, setRatingMessages] = useState({});
   const [submittingRatings, setSubmittingRatings] = useState({});
+
   const [cart, setCart] = useState(() => {
-  try {
-    const saved = JSON.parse(
-      localStorage.getItem("foodswiftCart") || "null"
-    );
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem("foodswiftCart") || "null"
+      );
 
-   if (String(saved?.restaurantId) === String(restaurantId)) {
-  return Object.fromEntries(
-    (saved.items || []).map((item) => [
-      item.id,
-      Number(item.quantity) || 0,
-    ])
-  );
-}
-  } catch {
-    // Ignore invalid saved cart data.
-  }
+      if (String(saved?.restaurantId) === String(restaurantId)) {
+        return Object.fromEntries(
+          (saved.items || []).map((item) => [
+            item.id,
+            Number(item.quantity) || 0,
+          ])
+        );
+      }
+    } catch {
+      // Ignore invalid saved cart data.
+    }
 
-  return {};
-});
+    return {};
+  });
 
-
-  // Load menu items and their ratings
+  // Load menu items and ratings
   useEffect(() => {
     if (!restaurantId) {
       setError("Restaurant ID is missing.");
@@ -102,7 +105,9 @@ function RestaurantMenu() {
         setError("");
 
         const response = await fetch(
-          `${API_URL}/api/menu/?restaurant=${encodeURIComponent(restaurantId)}`,
+          `${API_URL}/api/menu/?restaurant=${encodeURIComponent(
+            restaurantId
+          )}`,
           { signal: controller.signal }
         );
 
@@ -111,6 +116,7 @@ function RestaurantMenu() {
         }
 
         const data = await response.json();
+
         const items = Array.isArray(data)
           ? data
           : data.results || [];
@@ -120,6 +126,7 @@ function RestaurantMenu() {
         );
 
         setMenuItems(availableItems);
+
         await fetchFoodRatings(availableItems);
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -139,7 +146,37 @@ function RestaurantMenu() {
     return () => controller.abort();
   }, [restaurantId]);
 
-  // Submit a food rating and review
+  // Highlight and scroll to the chatbot-selected dish
+  useEffect(() => {
+    if (loading || !selectedItemId || menuItems.length === 0) {
+      return;
+    }
+
+    const selectedItem = menuItems.find(
+      (item) => String(item.id) === String(selectedItemId)
+    );
+
+    if (!selectedItem) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const element = document.getElementById(
+        `food-menu-item-${selectedItemId}`
+      );
+
+      if (element) {
+        element.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [loading, selectedItemId, menuItems]);
+
+  // Submit food rating and review
   const submitFoodRating = async (foodItemId) => {
     const rating = selectedRatings[foodItemId];
     const review = reviewTexts[foodItemId] || "";
@@ -284,49 +321,46 @@ function RestaurantMenu() {
   }, [menuItems, search, selectedCategory, vegOnly]);
 
   // Cart quantity
+  function changeQuantity(item, amount) {
+    setCart((previous) => {
+      const currentQuantity = Number(previous[item.id] || 0);
+      const nextQuantity = Math.max(0, currentQuantity + amount);
 
-function changeQuantity(item, amount) {
-  setCart((previous) => {
-    const currentQuantity = Number(previous[item.id] || 0);
-    const nextQuantity = Math.max(0, currentQuantity + amount);
+      const updated = { ...previous };
 
-    const updated = { ...previous };
+      if (nextQuantity === 0) {
+        delete updated[item.id];
+      } else {
+        updated[item.id] = nextQuantity;
+      }
 
-    if (nextQuantity === 0) {
-      delete updated[item.id];
-    } else {
-      updated[item.id] = nextQuantity;
-    }
+      const savedItems = menuItems
+        .filter((food) => Number(updated[food.id]) > 0)
+        .map((food) => ({
+          id: food.id,
+          name: food.name,
+          price: Number(food.price || 0),
+          image: food.image || "",
+          quantity: Number(updated[food.id]),
+        }));
 
-    // Preserve every dish currently in the cart.
-    const savedItems = menuItems
-      .filter((food) => Number(updated[food.id]) > 0)
-      .map((food) => ({
-        id: food.id,
-        name: food.name,
-        price: Number(food.price || 0),
-        image: food.image || "",
-        quantity: Number(updated[food.id]),
-      }));
+      const savedCart = {
+        restaurantId: String(restaurantId),
+        items: savedItems,
+      };
 
-    const savedCart = {
-      restaurantId: String(restaurantId),
-      items: savedItems,
-    };
+      if (savedItems.length === 0) {
+        localStorage.removeItem("foodswiftCart");
+      } else {
+        localStorage.setItem(
+          "foodswiftCart",
+          JSON.stringify(savedCart)
+        );
+      }
 
-    if (savedItems.length === 0) {
-      localStorage.removeItem("foodswiftCart");
-    } else {
-      localStorage.setItem(
-        "foodswiftCart",
-        JSON.stringify(savedCart)
-      );
-    }
-
-    return updated;
-  });
-}
-
+      return updated;
+    });
+  }
 
   const cartItems = menuItems.filter(
     (item) => cart[item.id] > 0
@@ -345,28 +379,38 @@ function changeQuantity(item, amount) {
 
   return (
     <main className="restaurant-menu-page">
+
+      {/* Page Header */}
       <header className="menu-page-header">
+
         <button
-            type="button"
-            className="menu-back-button"
-            onClick={() => navigate(-1)}
-            >
-            ← Back to restaurants
+          type="button"
+          className="menu-back-button"
+          onClick={() => navigate(-1)}
+        >
+          ← Back to restaurants
         </button>
+
         <div className="menu-heading-content">
           <p className="menu-eyebrow">
             FOODSWIFT · GOOD FOOD, DELIVERED
           </p>
+
           <h1>Discover your next favourite dish.</h1>
+
           <p>
             Fresh flavours, delicious choices, all in one place.
           </p>
         </div>
+
       </header>
 
+      {/* Search and Filters */}
       <section className="menu-toolbar">
+
         <div className="menu-search-box">
           <span aria-hidden="true">⌕</span>
+
           <input
             type="search"
             value={search}
@@ -377,6 +421,7 @@ function changeQuantity(item, amount) {
         </div>
 
         <label className="veg-filter">
+
           <input
             type="checkbox"
             checked={vegOnly}
@@ -384,34 +429,47 @@ function changeQuantity(item, amount) {
               setVegOnly(event.target.checked)
             }
           />
+
           <span className="veg-filter-dot">●</span>
           Vegetarian only
+
         </label>
+
       </section>
 
+      {/* Categories */}
       {!loading && !error && menuItems.length > 0 && (
+
         <nav
           className="menu-category-list"
           aria-label="Food categories"
         >
+
           {categories.map((category) => (
+
             <button
-                type="button"
-                key={category}
-                className={`menu-category-chip ${
-                    selectedCategory === category ? "active" : ""
-                }`}
-                onClick={() => setSelectedCategory(category)}
-                >
-                {category}
+              type="button"
+              key={category}
+              className={`menu-category-chip ${
+                selectedCategory === category ? "active" : ""
+              }`}
+              onClick={() => setSelectedCategory(category)}
+            >
+              {category}
             </button>
+
           ))}
+
         </nav>
+
       )}
 
+      {/* Results Heading */}
       <section className="menu-results-heading">
+
         <div>
           <h2>Explore the menu</h2>
+
           <p>
             {loading
               ? "Finding delicious dishes..."
@@ -420,47 +478,69 @@ function changeQuantity(item, amount) {
                 } available`}
           </p>
         </div>
+
       </section>
 
+      {/* Loading */}
       {loading && (
+
         <div className="menu-status">
           <span className="menu-loader" />
           <p>Loading your menu...</p>
         </div>
+
       )}
 
+      {/* Error */}
       {!loading && error && (
+
         <div className="menu-empty-state">
+
           <h2>We couldn't load the menu</h2>
           <p>{error}</p>
+
           <button
             className="menu-primary-button"
             onClick={() => window.location.reload()}
           >
             Try again
           </button>
+
         </div>
+
       )}
 
+      {/* Empty Menu */}
       {!loading && !error && menuItems.length === 0 && (
+
         <div className="menu-empty-state">
+
           <span className="menu-empty-icon">🍽</span>
+
           <h2>The menu is getting ready</h2>
+
           <p>
             This restaurant has no available food items right now.
           </p>
+
         </div>
+
       )}
 
+      {/* No Search Results */}
       {!loading &&
         !error &&
         menuItems.length > 0 &&
         filteredItems.length === 0 && (
+
           <div className="menu-empty-state">
+
             <h2>No matching dishes</h2>
+
             <p>
               Try another search or choose a different category.
             </p>
+
             <button
               className="menu-primary-button"
               onClick={() => {
@@ -471,34 +551,56 @@ function changeQuantity(item, amount) {
             >
               Clear filters
             </button>
+
           </div>
+
         )}
 
+      {/* Food Menu */}
       {!loading && !error && filteredItems.length > 0 && (
+
         <section className="food-menu-grid">
+
           {filteredItems.map((item) => {
+
             const quantity = cart[item.id] || 0;
+
             const isVeg =
               item.food_type?.toLowerCase() === "veg";
 
+            const isChatbotSelected =
+              String(item.id) === String(selectedItemId);
+
             return (
+
               <article
-                className="food-menu-card"
+                id={`food-menu-item-${item.id}`}
+                className={`food-menu-card ${
+                  isChatbotSelected
+                    ? "chatbot-selected-food"
+                    : ""
+                }`}
                 key={item.id}
               >
+
+                {/* Food Image */}
                 <div className="food-menu-image">
+
                   {item.image ? (
+
                     <img
                       src={item.image}
                       alt={item.name}
                       loading="lazy"
                       onError={(event) => {
                         event.currentTarget.style.display = "none";
+
                         event.currentTarget.parentElement.classList.add(
                           "image-failed"
                         );
                       }}
                     />
+
                   ) : null}
 
                   <span className="food-image-placeholder">
@@ -513,36 +615,54 @@ function changeQuantity(item, amount) {
                     <span>●</span>{" "}
                     {isVeg ? "VEG" : "NON-VEG"}
                   </span>
+
                 </div>
 
+                {/* Food Details */}
                 <div className="food-menu-details">
+
                   <p className="food-category">
                     {item.category || "Chef's special"}
                   </p>
 
                   <h3>{item.name}</h3>
 
+                  {isChatbotSelected && (
+                    <p className="chatbot-selected-label">
+                      Selected from FoodSwift AI
+                    </p>
+                  )}
+
+                  {/* Food Rating */}
                   <div className="food-rating">
+
                     <span className="food-rating-stars">
                       ★★★★★
                     </span>
+
                     <strong>
                       {(
                         foodRatings[item.id]?.average_rating ?? 0
                       ).toFixed(1)}
                     </strong>
+
                     <span>
                       ({foodRatings[item.id]?.rating_count ?? 0} ratings)
                     </span>
+
                   </div>
 
+                  {/* Review Form */}
                   <div className="food-review-form">
+
                     <p className="review-label">
                       Rate this food
                     </p>
 
                     <div className="review-star-selector">
+
                       {[1, 2, 3, 4, 5].map((star) => (
+
                         <button
                           key={star}
                           type="button"
@@ -561,7 +681,9 @@ function changeQuantity(item, amount) {
                         >
                           ★
                         </button>
+
                       ))}
+
                     </div>
 
                     <textarea
@@ -591,85 +713,111 @@ function changeQuantity(item, amount) {
                     </button>
 
                     {ratingMessages[item.id] && (
+
                       <p className="rating-message" role="status">
                         {ratingMessages[item.id]}
                       </p>
+
                     )}
+
                   </div>
 
+                  {/* Description */}
                   <p className="food-description">
                     {item.description ||
                       "Deliciously prepared with care and quality ingredients."}
                   </p>
 
+                  {/* Price and Cart */}
                   <div className="food-menu-footer">
+
                     <strong>
                       ₹{Number(item.price || 0).toFixed(2)}
                     </strong>
 
                     {quantity === 0 ? (
+
                       <button
                         type="button"
                         className="menu-add-button"
                         onClick={() => changeQuantity(item, 1)}
                         aria-label={`Add ${item.name} to cart`}
-                        >
-                         + Add
-                    </button>
+                      >
+                        + Add
+                      </button>
+
                     ) : (
+
                       <div className="menu-quantity-control">
-                            <button
-                                type="button"
-                                onClick={() => changeQuantity(item, -1)}
-                                aria-label={`Remove one ${item.name}`}
-                            >
-                                −
-                            </button>
 
-                            <span>{quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => changeQuantity(item, -1)}
+                          aria-label={`Remove one ${item.name}`}
+                        >
+                          −
+                        </button>
 
-                            <button
-                                type="button"
-                                onClick={() => changeQuantity(item, 1)}
-                                aria-label={`Add one ${item.name}`}
-                            >
-                                +
-                            </button>
-                     </div>
+                        <span>{quantity}</span>
+
+                        <button
+                          type="button"
+                          onClick={() => changeQuantity(item, 1)}
+                          aria-label={`Add one ${item.name}`}
+                        >
+                          +
+                        </button>
+
+                      </div>
+
                     )}
+
                   </div>
+
                 </div>
+
               </article>
+
             );
           })}
+
         </section>
+
       )}
 
+      {/* Cart Bar */}
       {cartCount > 0 && (
+
         <aside className="menu-cart-bar">
+
           <div className="menu-cart-info">
+
             <span className="menu-cart-count">
               {cartCount}
             </span>
+
             <div>
               <strong>
                 {cartCount} item{cartCount === 1 ? "" : "s"} added
               </strong>
+
               <p>Subtotal · ₹{subtotal.toFixed(2)}</p>
             </div>
+
           </div>
 
-          
-       <button
+          <button
             type="button"
             className="menu-cart-button"
             onClick={() => navigate("/cart")}
-            >
+          >
             View cart →
-        </button>
+          </button>
 
         </aside>
+
       )}
+
     </main>
   );
 }

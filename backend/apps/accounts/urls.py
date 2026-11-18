@@ -13,6 +13,8 @@ from .views import (
     ResetPasswordView,
     SavedAddressListCreateView,
     SavedAddressDetailView,
+    GoogleLoginView,
+    LoginVerifyView
 )
 
 urlpatterns = [
@@ -69,4 +71,12 @@ urlpatterns = [
         SavedAddressDetailView.as_view(),
         name="saved-address-detail",
     ),
+
+    path("google/", GoogleLoginView.as_view(), name="google-login"),
+
+    path(
+            "login/verify/",
+            LoginVerifyView.as_view(),
+            name="login-verify",
+        ),
 ]

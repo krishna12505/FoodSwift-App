@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import generics, status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -20,8 +21,10 @@ from rest_framework.exceptions import PermissionDenied
 from django.db import transaction
 from .models import SavedAddress
 from .serializers import SavedAddressSerializer
-
 from rest_framework_simplejwt.tokens import RefreshToken
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
 
 # Register View page
 
@@ -411,3 +414,109 @@ class SavedAddressDetailView(generics.RetrieveUpdateDestroyAPIView):
 
     def perform_destroy(self, instance):
         instance.delete()
+
+
+class GoogleLoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = []
+
+    def post(self, request):
+
+        # Receive Google ID token from React
+        google_token = request.data.get("credential")
+
+        if not google_token:
+            return Response(
+                {"message": "Google credential is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify Google ID token
+        try:
+            google_data = id_token.verify_oauth2_token(
+                google_token,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID
+            )
+
+        except ValueError:
+            return Response(
+                {"message": "Invalid Google authentication token."},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        # Extract Google account information
+        email = google_data.get("email", "").strip().lower()
+        name = google_data.get("name", "").strip()
+        email_verified = google_data.get("email_verified", False)
+
+        if not email or not email_verified:
+            return Response(
+                {"message": "Google email is not verified."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        Account = get_user_model()
+
+        # Check whether account already exists
+        account = Account.objects.filter(
+            email__iexact=email
+        ).first()
+
+        if account:
+
+            if not account.is_active:
+                return Response(
+                    {"message": "Your account is inactive."},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+            if account.role != "customer":
+                return Response(
+                    {
+                        "message": (
+                            "Google login is available "
+                            "for customer accounts only."
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+
+        else:
+
+            # Generate a unique username
+            username = f"google_{uuid.uuid4().hex}"
+
+            # Create new customer account
+            account = Account.objects.create_user(
+                username=username,
+                name=name or email.split("@")[0],
+                email=email,
+                role="customer"
+            )
+
+            # Google users do not need a local password
+            account.set_unusable_password()
+            account.save()
+
+        # Generate FoodSwift JWT tokens
+        refresh = RefreshToken.for_user(account)
+
+        return Response(
+            {
+                "message": "Google login successful",
+
+                "user": {
+                    "id": account.id,
+                    "name": account.name,
+                    "email": account.email,
+                    "role": account.role,
+                },
+
+                "tokens": {
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                },
+            },
+            status=status.HTTP_200_OK
+        )

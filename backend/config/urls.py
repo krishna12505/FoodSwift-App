@@ -24,4 +24,5 @@ urlpatterns = [
     path("api/menu/", include("apps.menu.urls")),
     path("api/reviews/", include("apps.reviews.urls")),
     path("api/orders/", include("apps.orders.urls")),
+    path("api/chatbot/", include("apps.chatbot.urls")),
 ]

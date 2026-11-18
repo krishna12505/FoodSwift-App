@@ -22,16 +22,30 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ResetPassword from "./pages/ResetPassword";
 import SavedAddresses from "./pages/SavedAddresses";
+import Chatbot from "./pages/Chatbot";
 
 function AppContent() {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
 
   const location = useLocation();
+
   const isMenuPage = location.pathname === "/menu";
+
+  // Show chatbot only on customer-facing pages
+  const showChatbot = [
+    "/",
+    "/menu",
+    "/profile",
+    "/cart",
+    "/checkout",
+    "/my-orders",
+    "/addresses",
+  ].includes(location.pathname);
 
   return (
     <div>
+      {/* Header */}
       {!isMenuPage && (
         <Header
           openLogin={() => setShowLogin(true)}
@@ -39,6 +53,7 @@ function AppContent() {
         />
       )}
 
+      {/* Login Modal */}
       {showLogin && (
         <LoginModel
           closeLogin={() => setShowLogin(false)}
@@ -49,6 +64,7 @@ function AppContent() {
         />
       )}
 
+      {/* Register Modal */}
       {showRegister && (
         <RegisterModel
           closeRegister={() => setShowRegister(false)}
@@ -59,6 +75,7 @@ function AppContent() {
         />
       )}
 
+      {/* Application Routes */}
       <Routes>
         {/* Public pages */}
         <Route path="/" element={<CustomerHome />} />
@@ -101,7 +118,7 @@ function AppContent() {
           }
         />
 
-        {/* Restaurant owner dashboard */}
+        {/* Restaurant Owner Dashboard */}
         <Route
           path="/restaurant-dashboard"
           element={
@@ -111,7 +128,7 @@ function AppContent() {
           }
         />
 
-        {/* Delivery partner dashboard */}
+        {/* Delivery Partner Dashboard */}
         <Route
           path="/delivery-dashboard"
           element={
@@ -121,7 +138,7 @@ function AppContent() {
           }
         />
 
-        {/* Admin dashboard */}
+        {/* Admin Dashboard */}
         <Route
           path="/admin-dashboard"
           element={
@@ -131,11 +148,13 @@ function AppContent() {
           }
         />
 
+        {/* Password Reset */}
         <Route
           path="/reset-password/:uid/:token"
           element={<ResetPassword />}
         />
 
+        {/* Saved Addresses */}
         <Route
           path="/addresses"
           element={
@@ -145,9 +164,15 @@ function AppContent() {
           }
         />
 
-        {/* Unknown routes */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Unknown Routes */}
+        <Route
+          path="*"
+          element={<Navigate to="/" replace />}
+        />
       </Routes>
+
+      {/* FoodSwift AI Chatbot */}
+      {showChatbot && <Chatbot />}
     </div>
   );
 }
