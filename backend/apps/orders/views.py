@@ -1,4 +1,3 @@
-
 from datetime import timedelta
 from decimal import Decimal
 
@@ -25,9 +24,183 @@ from apps.accounts.permissions import (
     IsDeliveryPartner,
 )
 from apps.restaurants.models import Restaurant
+from apps.menu.models import MenuItem
+from .models import Order, AbandonedCart
+import secrets
 
-from .models import Order
 from .serializers import OrderSerializer
+
+import json
+import logging
+import os
+from urllib.request import Request, urlopen
+
+logger = logging.getLogger(__name__) # it logging is storing the software records of operation what we have 
+#logging is the process of recording information about what happens inside an  appliaction or software while it is running
+
+## getLogger is function provide by the pythin logging module is used to create log or retrieve a logger
+## __name__ is a special built-in pythion variable
+## it contains the name of the current python module (file)
+
+
+def send_foodswift_order_webhook(order):
+    webhook_url = os.getenv("N8N_WEBHOOK_URL")
+
+    if not webhook_url:
+        logger.warning("N8N_WEBHOOK_URL is not configured.")
+        return
+    payload = {
+         "event" : "order.created",
+         "order_id": order.id,
+         "customer_name": order.customer.name,
+         "customer_email": order.customer.email,
+         "restaurant":order.restaurant.name,
+         "total_amount":str(order.total_amount),
+         "payment_method": order.payment_method,
+         "status":order.status,
+         "items": [
+             {
+                 "item_name": item.item_name,
+                 "quantity":item.quantity,
+                 "unit_price":str(item.unit_price),
+                 "line_total":str(item.line_total)
+             }
+             for item in order.items.all()
+         ],
+
+     }
+
+    data = json.dumps(payload).encode("utf-8")
+
+    request = Request(webhook_url,
+                      data = data,
+                      headers={"Content-Type": "application/json"},
+                      method = "POST",
+                      )
+    try:
+        with urlopen(request,timeout = 5) as response:
+            logger.info(
+                "FoodSwift webhook sent. Order ID: %s, HTTP status: %s",
+                order.id,
+                response.status,
+            )
+
+    except Exception:
+        logger.exception(
+            "FoodSwift webhook failed for order ID: %s",order.id,
+        )
+
+
+class CartTrackingView(APIView):
+    permission_classes = [IsAuthenticated, IsCustomer]
+
+    def post(self, request):
+        restaurant_id = request.data.get("restaurant_id")
+        items = request.data.get("items", [])
+
+        # Customer cleared the cart
+        if not items:
+            AbandonedCart.objects.filter(
+                customer=request.user,
+                is_active=True,
+            ).update(is_active=False)
+
+            return Response(
+                {"message": "Cart cleared successfully."},
+                status=status.HTTP_200_OK,
+            )
+
+        if not restaurant_id:
+            raise ValidationError({
+                "restaurant_id": "Restaurant ID is required."
+            })
+
+        if not isinstance(items, list):
+            raise ValidationError({
+                "items": "Items must be a list."
+            })
+
+        try:
+            restaurant = Restaurant.objects.get(pk=restaurant_id)
+        except Restaurant.DoesNotExist:
+            raise NotFound("Restaurant not found.")
+
+        if not restaurant.is_active or not restaurant.is_open:
+            raise ValidationError({
+                "restaurant": "This restaurant is unavailable."
+            })
+
+        seen = set()
+        saved_items = []
+        subtotal = Decimal("0.00")
+
+        for item in items:
+            menu_item_id = item.get("id")
+            quantity = item.get("quantity")
+
+            if not menu_item_id or not isinstance(quantity, int):
+                raise ValidationError({
+                    "items": "Each item needs a valid ID and quantity."
+                })
+
+            if quantity < 1:
+                raise ValidationError({
+                    "items": "Quantity must be at least 1."
+                })
+
+            if menu_item_id in seen:
+                raise ValidationError({
+                    "items": "Duplicate food items are not allowed."
+                })
+
+            seen.add(menu_item_id)
+
+            try:
+                food = MenuItem.objects.get(
+                    pk=menu_item_id,
+                    restaurant=restaurant,
+                    is_available=True,
+                )
+            except MenuItem.DoesNotExist:
+                raise ValidationError({
+                    "items": f"Food item {menu_item_id} is unavailable."
+                })
+
+            line_total = food.price * quantity
+            subtotal += line_total
+
+            saved_items.append({
+                "menu_item_id": food.id,
+                "name": food.name,
+                "price": str(food.price),
+                "quantity": quantity,
+                "line_total": str(line_total),
+            })
+
+        delivery_fee = Decimal("40.00")
+        total_amount = subtotal + delivery_fee
+
+        cart, created = AbandonedCart.objects.update_or_create(
+            customer=request.user,
+            defaults={
+                "restaurant": restaurant,
+                "items": saved_items,
+                "subtotal": subtotal,
+                "delivery_fee": delivery_fee,
+                "total_amount": total_amount,
+                "is_active": True,
+                "reminder_sent_at": None,
+            },
+        )
+
+        return Response({
+            "message": "Cart saved successfully.",
+            "cart_id": cart.id,
+            "subtotal": str(cart.subtotal),
+            "delivery_fee": str(cart.delivery_fee),
+            "total_amount": str(cart.total_amount),
+            "last_activity": cart.last_activity,
+        }, status=status.HTTP_200_OK)
 
 
 class OrderListCreateView(generics.ListCreateAPIView):
@@ -43,9 +216,18 @@ class OrderListCreateView(generics.ListCreateAPIView):
         )
 
     def perform_create(self, serializer):
-        serializer.save()
+        order = serializer.save()
 
+        # Customer completed checkout.
+        # Mark their abandoned cart inactive.
+        AbandonedCart.objects.filter(
+            customer=self.request.user,
+            is_active=True,
+        ).update(is_active=False)
 
+        transaction.on_commit(
+            lambda: send_foodswift_order_webhook(order)
+        )
 class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
@@ -715,4 +897,90 @@ class AdminReportsView(APIView):
             },
             "status_breakdown": status_breakdown,
             "daily_trend": daily_trend,
+        })
+
+
+class N8nAbandonedCartListView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        expected_secret = os.getenv("N8N_CART_SECRET")
+        provided_secret = request.headers.get("X-N8N-CART-SECRET", "")
+
+        if not expected_secret or not secrets.compare_digest(
+            expected_secret, provided_secret
+        ):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        inactive_time = timezone.now() - timedelta(minutes=30)
+
+        carts = AbandonedCart.objects.filter(
+            is_active=True,
+            reminder_sent_at__isnull=True,
+            last_activity__lte=inactive_time,
+        ).select_related("customer", "restaurant")
+
+        results = []
+
+        for cart in carts:
+            results.append({
+                "cart_id": cart.id,
+                "customer_name": cart.customer.name,
+                "customer_email": cart.customer.email,
+                "restaurant_name": (
+                    cart.restaurant.name if cart.restaurant else "FoodSwift"
+                ),
+                "items": cart.items,
+                "total_amount": str(cart.total_amount),
+                "last_activity": cart.last_activity,
+            })
+
+        return Response({
+            "count": len(results),
+            "carts": results,
+        })
+
+
+class N8nMarkCartReminderSentView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def post(self, request):
+        expected_secret = os.getenv("N8N_CART_SECRET")
+        provided_secret = request.headers.get("X-N8N-CART-SECRET", "")
+
+        if not expected_secret or not secrets.compare_digest(
+            expected_secret, provided_secret
+        ):
+            return Response(
+                {"error": "Unauthorized"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        cart_id = request.data.get("cart_id")
+
+        if not cart_id:
+            return Response(
+                {"error": "cart_id is required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        updated = AbandonedCart.objects.filter(
+            id=cart_id,
+            is_active=True,
+            reminder_sent_at__isnull=True,
+        ).update(reminder_sent_at=timezone.now())
+
+        if not updated:
+            return Response(
+                {"error": "Cart not found or reminder already sent"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        return Response({
+            "message": "Reminder marked as sent successfully."
         })

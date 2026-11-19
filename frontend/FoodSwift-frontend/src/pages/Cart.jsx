@@ -1,8 +1,10 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Cart.css";
 
 const CART_KEY = "foodswiftCart";
+const API_URL = "http://127.0.0.1:8000";
 
 function readCart() {
   try {
@@ -25,12 +27,53 @@ function Cart() {
   const navigate = useNavigate();
   const [cart, setCart] = useState(readCart);
 
+  // Send cart details to Django
+  async function syncCartWithBackend(cartData) {
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      console.log("User is not logged in. Cart was not synced.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/api/orders/cart/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          restaurant_id: cartData.restaurantId,
+          items: cartData.items.map((item) => ({
+            id: item.id,
+            quantity: Number(item.quantity),
+          })),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Cart sync failed:", data);
+        return;
+      }
+
+      console.log("Cart synced successfully:", data);
+    } catch (error) {
+      console.error("Cart sync error:", error);
+    }
+  }
+
+  // Save cart locally and synchronize with Django
   useEffect(() => {
     if (cart.items.length === 0) {
       localStorage.removeItem(CART_KEY);
     } else {
       localStorage.setItem(CART_KEY, JSON.stringify(cart));
     }
+
+    syncCartWithBackend(cart);
   }, [cart]);
 
   const subtotal = useMemo(
@@ -139,7 +182,7 @@ function Cart() {
                       src={
                         item.image.startsWith("http")
                           ? item.image
-                          : `http://127.0.0.1:8000${item.image}`
+                          : `${API_URL}${item.image}`
                       }
                       alt={item.name}
                       onError={(event) => {
@@ -233,3 +276,4 @@ function Cart() {
 }
 
 export default Cart;
+

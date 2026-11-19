@@ -96,3 +96,62 @@ class OrderItem(models.Model):
 
     def __str__(self):
         return f"{self.item_name} x {self.quantity}"
+
+
+class AbandonedCart(models.Model):
+
+    customer = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete = models.CASCADE,
+        related_name = "abandoned_cart",
+        limit_choices_to = {"role":"customer"},
+    )
+
+    restaurant = models.ForeignKey(
+        Restaurant,on_delete= models.SET_NULL,
+        null = True,
+        blank = True,
+        related_name="abandoned_carts",
+    )
+
+    # Store cart items information
+
+    items = models.JSONField(default=list)
+
+    subtotal = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
+
+    delivery_fee = models.DecimalField(
+        max_digits=8,
+        decimal_places=2,
+        default=0,
+    )
+
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+    )
+
+    # track cart Activity
+
+    last_activity = models.DateTimeField(auto_now = True)
+
+    remainder_sent_at = models.DateTimeField(
+        null = True,
+        blank =  True,
+    )
+
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add = True)
+
+
+    def __str__(self):
+        return f"Abandoned Cart - {self.customer.email}"
+    
+
+

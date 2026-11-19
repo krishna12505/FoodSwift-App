@@ -11,6 +11,9 @@ from .views import (
     AdminOrderListView,
     AdminReportsView,
     MockPaymentView,
+    CartTrackingView,
+    N8nAbandonedCartListView,
+    N8nMarkCartReminderSentView,
 )
 
 urlpatterns = [
@@ -67,5 +70,22 @@ path(
     MockPaymentView.as_view(),
     name="mock-payment",
 ),
+   path(
+    "cart/",
+    CartTrackingView.as_view(),
+    name="cart-tracking",
+),
+   path(
+    "n8n/abandoned-carts/",
+    N8nAbandonedCartListView.as_view(),
+    name="n8n-abandoned-carts",
+    ),
+
+    path(
+        "n8n/mark-reminder-sent/",
+        N8nMarkCartReminderSentView.as_view(),
+        name="n8n-mark-reminder-sent",
+    ),
+
 
 ]
